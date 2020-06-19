@@ -1,0 +1,65 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      initContainers:
+      - name: init-database
+        image: mongo:3.4
+        volumeMounts:
+        - name: share-data
+          mountPath: /share-data/
+        command: ["/bin/sh"]
+        args: ["-c", "echo 'init database'"] 
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: "graphql"
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "node"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "node-password"
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: mongodb-password
+          #     key: password
+        volumeMounts:
+        - name: mongodb-persistent-storage
+          mountPath: /var/lib/mongodb
+      containers:
+      - name: graphql-mongodb
+        image: mongo:3.4
+        command: ["mongod"]
+        args: ["--auth"]
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        volumeMounts:
+        - name: mongodb-persistent-storage
+          mountPath: /data/db
+        imagePullPolicy: Always
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+      volumes:
+      - name: mongodb-persistent-storage
+        persistentVolumeClaim:
+          claimName: mongodb-pv-claim
+      nodeSelector:
+        "kubernetes.io/hostname": "kcert-worker-s01"

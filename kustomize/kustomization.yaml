@@ -1,0 +1,10 @@
+# kustomization.yaml
+namespace: database
+secretGenerator:
+- name: node
+  literals:
+  - password=node-password
+resources:
+  - persistent.yaml
+  - service.yaml
+  - deployment.yaml

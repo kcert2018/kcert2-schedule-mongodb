@@ -1,0 +1,19 @@
+#
+# 이 파일은 도커를 관리하는 파일입니다. 
+#
+version: '2'
+services:
+  mongodb-schedule-ps:
+    build:
+      context    : ./deployment
+      dockerfile : Dockerfile
+    image        : kcert2/mongodb-schedule-ps:0.1
+    container_name : mongodb-schedule-ps
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      NODE_ENV: production
+    command: bash
+
+# end of file
